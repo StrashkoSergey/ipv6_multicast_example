@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 	memset(&gsr, 0, sizeof(gsr));
 
 	/* Set up the connection to the group */
-	gsr.gsr_interface = if_nametoindex("teredo");
+	gsr.gsr_interface = if_nametoindex(getenv("IF"));
 	group=(struct sockaddr_in6*)&gsr.gsr_group;
 	source=(struct sockaddr_in6*)&gsr.gsr_source;
 	group->sin6_family = AF_INET6;

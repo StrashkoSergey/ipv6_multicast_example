@@ -20,7 +20,7 @@ main(int argc, char *argv[])
 	struct sockaddr_in6 saddr;
 	char buf[1400];
 	ssize_t len = 1;
-	int sd, fd, on = 1, hops = 255, ifidx = if_nametoindex("teredo");
+	int sd, fd, on = 1, hops = 255, ifidx = if_nametoindex(getenv("IF"));
 
 	if (argc < 3) {
 		printf("\nUsage: %s <address> <port>\n\nExample: %s ff02::5:6 12345\n\n", argv[0], argv[0]);
@@ -57,14 +57,6 @@ main(int argc, char *argv[])
 	saddr.sin6_family = AF_INET6;
 	saddr.sin6_port = htons(atoi(argv[2]));
 	inet_pton(AF_INET6, argv[1], &saddr.sin6_addr);
-
-	memcpy(&mreq.ipv6mr_multiaddr, &saddr.sin6_addr, sizeof(mreq.ipv6mr_multiaddr));
-	mreq.ipv6mr_interface = ifidx;
-
-	if (setsockopt(sd, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *) &mreq, sizeof(mreq))) {
-		perror("setsockopt");
-		return 1;
-	}
 
 	fd = STDIN_FILENO;
 
