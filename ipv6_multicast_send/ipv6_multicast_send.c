@@ -2,6 +2,7 @@
 	2012 - Bjorn Lindgren <nr@c64.org>
 	https://github.com/bjornl/ipv6_multicast_example
 */
+#include <net/if.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,10 +18,9 @@ int
 main(int argc, char *argv[])
 {
 	struct sockaddr_in6 saddr;
-	struct ipv6_mreq mreq;
 	char buf[1400];
 	ssize_t len = 1;
-	int sd, fd, on = 1, hops = 255, ifidx = 0;
+	int sd, fd, on = 1, hops = 255, ifidx = if_nametoindex("teredo");
 
 	if (argc < 3) {
 		printf("\nUsage: %s <address> <port>\n\nExample: %s ff02::5:6 12345\n\n", argv[0], argv[0]);
@@ -66,11 +66,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	fd = open("/dev/stdin", O_RDONLY, NULL);
-	if (fd < 0) {
-		perror("open");
-		return 1;
-	}
+	fd = STDIN_FILENO;
 
 	while (len) {
 		len = read(fd, buf, 1400);

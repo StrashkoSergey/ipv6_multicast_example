@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,9 +17,8 @@
 int
 main(int argc, char *argv[])
 {
-	struct sockaddr_in6 saddr, maddr;
-	struct ipv6_mreq mreq;
-	char buf[1400];
+	struct sockaddr_in6 saddr;
+	char buf[1401];
 	ssize_t len;
 	int sd, fd, rc, on = 1, flag = 0, hops = 255, ifidx = 0;
 	struct timeval tv;
@@ -65,13 +65,26 @@ main(int argc, char *argv[])
 		return 1;
 	}
  
-	memset(&maddr, 0, sizeof(maddr));
-	inet_pton(AF_INET6, argv[1], &maddr.sin6_addr);
+	struct group_source_req gsr;
+	struct sockaddr_in6 *group;
+	struct sockaddr_in6 *source;
+	memset(&gsr, 0, sizeof(gsr));
 
-	memcpy(&mreq.ipv6mr_multiaddr, &maddr.sin6_addr, sizeof(mreq.ipv6mr_multiaddr));
-	mreq.ipv6mr_interface = ifidx;
+	/* Set up the connection to the group */
+	gsr.gsr_interface = if_nametoindex("teredo");
+	group=(struct sockaddr_in6*)&gsr.gsr_group;
+	source=(struct sockaddr_in6*)&gsr.gsr_source;
+	group->sin6_family = AF_INET6;
+	inet_pton(AF_INET6, argv[1], &group->sin6_addr);
 
-	if (setsockopt(sd, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *) &mreq, sizeof(mreq))) {
+	group->sin6_port = 0;
+	
+	source->sin6_family = AF_INET6;
+	inet_pton(AF_INET6, argv[3], &source->sin6_addr);
+
+	source->sin6_port = 0;
+	
+	if (setsockopt(sd, IPPROTO_IPV6, MCAST_JOIN_SOURCE_GROUP, (char *) &gsr, sizeof(gsr))) {
 		perror("setsockopt");
 		return 1;
 	}
@@ -81,11 +94,7 @@ main(int argc, char *argv[])
 	tv.tv_sec  = 10;
 	tv.tv_usec = 0;
 
-	fd = open("/dev/stdout", O_WRONLY, NULL);
-	if (fd < 0) {
-		perror("open");
-		return 1;
-	}
+	fd = STDOUT_FILENO;
 
 	while (1) {
 		if (flag) {
