@@ -20,7 +20,7 @@ main(int argc, char *argv[])
 	struct sockaddr_in6 saddr;
 	char buf[1401];
 	ssize_t len;
-	int sd, fd, rc, on = 1, flag = 0, hops = 255, ifidx = 0;
+	int sd, fd, rc, on = 1, flag = 0, hops = 255, ifidx = if_nametoindex(getenv("IF"));
 	struct timeval tv;
 	fd_set fds;
 
